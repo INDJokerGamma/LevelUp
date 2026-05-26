@@ -1,9 +1,9 @@
-const getresponse = (res,statusCode,success,message,data = null) =>{
+const sendResponse = (res, statusCode, message, data = null) => {
     return res.status(statusCode).json({
-        success : successCode <400,
-        message : message,
-        data : data
+        success: statusCode < 400,
+        message,
+        data,
     });
 };
 
-module.exports = getresponse;
+module.exports = sendResponse;
