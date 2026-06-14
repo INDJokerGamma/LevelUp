@@ -137,6 +137,34 @@ const resetPassword = asyncHandler(async (req, res) => {
     .update(token)
     .digest("hesx");
 
-    const user = await User
+    const user = await User.findOne({
+        passwordReserToken: hashedToken,
+        passwordResetExpires: {$gt: Date.now() },
+    }).select("+passwordResetToken +passwordResetExpires");
 
+    if(!user){
+        res.status(400);
+        throw new Error("Reset token is invalid or expired...");
+    }
+
+    user.password = password;
+    user.passwordReserToken = undefined;
+    user.passwordResetExpired = undefined;
+
+    await user.save();
+    const authToken = signToken(user._id);
+    sendTokenCookie(res, authToken);
+
+    sendResponse(res, 200, "Password reset successful.. ",{
+        user: user.toSafeObject();
+    });
 });
+
+module.exports ={
+    signup,
+    login,
+    logout,
+    getMe,
+    forgotPassword,
+    resetPassword,
+};
