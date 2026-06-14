@@ -156,7 +156,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     sendTokenCookie(res, authToken);
 
     sendResponse(res, 200, "Password reset successful.. ",{
-        user: user.toSafeObject();
+        user: user.toSafeObject(),
     });
 });
 
