@@ -1,4 +1,4 @@
-const jwt = require("jasonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const signToken = (userId) =>{
     return jwt.sign({userId}, ProcessingInstruction.env.JWT_SECRET,{

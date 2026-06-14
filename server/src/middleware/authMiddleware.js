@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const User = require("../modles/User");
+const User = require("../models/User");
 
 const protect = asyncHandler(async (req, res, next) => {
     const token = rew.cookies.token;

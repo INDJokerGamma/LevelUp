@@ -9,7 +9,7 @@ const {
     sendTokenCookie,
     clearTokenCookie,
 } = require("../services/tokenService");
-const { use } = require("react");
+// const { use } = require("react");
 
 const signup = asyncHandler(async(req, res) =>{
     const{name, username, email, password, confirmPassword, avatar} = req.body;
