@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Name is required"],
         trim: true,
-        minlength:[2, "Name must be atleast 5 charcters"],
+        minlength:[5, "Name must be atleast 5 charcters"],
         maxlength:[60, "Name must not exceed 60 Characters"],
     },
     username:{
@@ -99,7 +99,7 @@ const userSchema = new mongoose.Schema({
         min:0,
     },
 
-    longestSreak:{
+    longestStreak:{
         type: Number,
         default:0,
         min:0,
@@ -124,11 +124,11 @@ const userSchema = new mongoose.Schema({
         max: 100,
     },
 
-    consistancyScore:{
+    consistencyScore:{
         type: Number,
         default: 0,
         min: 0,
-        max: 0,
+        max: 100,
     },
 
     lifeBalanceScore:{
@@ -153,7 +153,7 @@ const userSchema = new mongoose.Schema({
             type:Boolean,
             default: true,
         },
-        showstats:{
+        showStats:{
             type: Boolean,
             default: true,
         },
@@ -164,7 +164,7 @@ const userSchema = new mongoose.Schema({
         },
     },
 
-    NotificationSetting:{
+    notificationSettings:{
         habitReminder:{
             type: Boolean,
             default: true,
@@ -201,21 +201,21 @@ const userSchema = new mongoose.Schema({
 }
 );
 
-userSchema.index({username: 1});
-userSchema.index({email: 1});
+// userSchema.index({username: 1});
+// userSchema.index({email: 1});
 userSchema.index({xp:-1});
 userSchema.index({level: -1});
 userSchema.index({createdAt: -1});
 
-userSchema.pre("save", async function(next){
-    if(!this.isModified("password")){
-        next();
-        return ;
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) {
+        return;
     }
 
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
 });
+
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
     return bcrypt.compare(enteredPassword, this.password);

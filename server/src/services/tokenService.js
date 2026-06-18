@@ -1,10 +1,11 @@
 const jwt = require("jsonwebtoken");
 
-const signToken = (userId) =>{
-    return jwt.sign({userId}, ProcessingInstruction.env.JWT_SECRET,{
+const signToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || "7d",
     });
 };
+
 
 const sendTokenCookie = (res, token) =>{
     const isProduction = process.env.NODE_ENV === "production";

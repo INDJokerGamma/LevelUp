@@ -93,12 +93,14 @@ const forgotPassword  = asyncHandler(async(req, res)=>{
         throw new Error("Please Provode your Email..");
     }
 
-    const user = await User.findOne({email: email.toLowerCase()}). select(
-        "+passwordResettoken +passwordRestExpires"
-    );
-    if(!user){
-        sendResponse(res,200, "If the email exists, a reset link will be sent..");
-        return ;
+    const user = await User.findOne({
+        email: email.toLowerCase(),
+    }).select("+passwordResetToken +passwordResetExpires");
+
+
+    if (!user) {
+        sendResponse(res, 200, "If the email exists, a reset link will be sent..");
+        return;
     }
 
     const resetToken = crypto.randomBytes(32).toString("hex");
@@ -107,8 +109,10 @@ const forgotPassword  = asyncHandler(async(req, res)=>{
         .update(resetToken)
         .digest("hex");
 
+
     user.passwordResetToken = hashedToken;
-    user.passwordResetExpired= Date.now() +15*60*1000;
+    user.passwordResetExpires = Date.now() + 15 * 60 * 1000;
+
 
     await user.save({validateBeforeSave: false});
 
@@ -133,23 +137,23 @@ const resetPassword = asyncHandler(async (req, res) => {
     }
 
     const hashedToken = crypto
-    .createHash("sha256")
-    .update(token)
-    .digest("hesx");
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
 
     const user = await User.findOne({
-        passwordReserToken: hashedToken,
-        passwordResetExpires: {$gt: Date.now() },
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
     }).select("+passwordResetToken +passwordResetExpires");
 
-    if(!user){
+    if (!user) {
         res.status(400);
-        throw new Error("Reset token is invalid or expired...");
+        throw new Error("Reset token is invalid or expired");
     }
 
     user.password = password;
-    user.passwordReserToken = undefined;
-    user.passwordResetExpired = undefined;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
 
     await user.save();
     const authToken = signToken(user._id);
