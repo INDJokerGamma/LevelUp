@@ -111,7 +111,160 @@ const updateHabit = asyncHandler (async (req, res) =>{
         'reminderTime',
     ];
     
-    
+    allowedFields.forEach((field) =>{
+        if(req.body[field] !== undefined){
+            habit[field] = req.body[field];
+        }
+    });
+    if(req.body.difficulty !== undefined){
+        const reward = rewardMap[req.body.difficulty];
+
+        if(!reward){
+            res.status(400);
+            throw new Error ("Difficulty must be easy, medium, or hard");
+        }
+
+        habit.difficulty = req.body.difficulty;
+        habit.xpReward = reward.xp;
+        habit.cointReward = reward.coins;
+    }
+
+    await habit.save();
+
+    sendResponse(res, 200,"Habit Updated Successfully", {habit});
 });
 
+const archiveHabit = asyncHandler(async(req, res) =>{
+    const habit = await Habit.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+        isActive: true,
+    });
+
+    if(!habit){
+        res.status(404);
+        throw new Error("Habit not Found..");
+    }
+
+    habit.isActive = false;
+    habit.archivedAt = new Date();
+    await habit.save();
+
+    sendResponse(res, 200, "Habit archived Successfully");
+});
+
+const completeHabit = asyncHandler(async (req, res) =>{
+    const habit = await Habit.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+        isActive: true,
+
+    });
+
+    if(!habit){
+        res.status(404);
+        throw new Error("Habit Not found");
+    }
+
+    const today = startOFUtcDay();
+
+    const existingLog = await HabitLog.findOne({
+        user: req.user._id,
+        habit: habit._id,
+        date: today,
+    });
+
+    if(existingLog){
+        res.status(409);
+        throw new Error("This habit has already been Completed Today");
+    }
+
+    const newStreak = calculateStreak(habit);
+
+    const log = await HabitLog.create({
+        user: req.user._id,
+        habit: habit._id,
+        date: today,
+        status: "Completed",
+        completedAt: new Date(),
+        xpEarned: habit.xpReward,
+        coinsEarned: habit.coinReward,
+        notes: req.body.notes || "",
+    });
+
+    habit.currentStreak = newStreak;
+    habit.longestStreak = Mathmax(habit.longestStreak, newStreak);
+    habit.totalCompletions += 1;
+    habit.lastCompletedAt = new Date();
+    await habit.save();
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $inc: {
+                xp: habit.xpReward,
+                coins: habit.coinReward,
+                totalCompletedHabits: 1,
+            },
+            $max: {
+                longestStreak: newStreak,
+            },
+            $set: {
+                currentStreak: newStreak,
+            },
+        },
+        {
+            new: true,
+            runValidators: true,
+        }
+    );
+    sendResponse(res, 200, "Habit completed successfully",{
+        log,
+        reward:{
+            xpEarned: habit.xpEarned,
+            coinsEarned: habit.coinReward,
+        },
+        streak: {
+            current: habit.currentStreak,
+            longest: habit.longestStreak,
+        },
+        userProgress: {
+            xp: user.xp,
+            coins: user.coins,
+            totalCompletedHabits: user.totalCompletedHabits,
+        },
+    });
+});
+
+const getHabitLogs = asyncHandler(async(req, res)=>{
+    const habit = await Habit.findOne({
+        _id: req.params.id,
+        user: req.user._id,
+    });
+
+    if(!habit){
+        res.status(404);
+        throw new Error("Habit not found..");
+    }
+
+    const logs = await HabitLog.find({
+        user: req.user._id,
+        habit: habit._id,
+    }).sort({date: -1});
+
+    sendResponse(res, 200, "Habit logs fetched successfully", {
+        count: logs.length,
+        logs,
+    });
+});
+
+module.exports ={
+    createHabit,
+    getHabits,
+    getHabitById,
+    updateHabit,
+    archiveHabit,
+    completeHabit,
+    getHabitLogs,
+};
 
