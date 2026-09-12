@@ -10,7 +10,7 @@ const xss = require("xss-clean");
 const healthRoutes = require("./routes/healthRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
-const habitRoutes = require("./routes/healthRoutes");
+const habitRoutes = require("./routes/habitRoutes");
 
 const app = express();
 

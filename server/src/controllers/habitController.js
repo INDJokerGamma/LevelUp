@@ -1,7 +1,8 @@
 const asyncHandler = require("express-async-handler");
 
 const Habit = require("../models/Habit");
-const HabitLog = require("../models/Habitlog");
+const HabitLog = require("../models/HabitLog");
+const User = require("../models/User");
 const sendResponse = require("../utils/apiResponse");
 
 const rewardMap ={
@@ -10,12 +11,18 @@ const rewardMap ={
     hard:{xp: 40, coins: 25},
 };
 
+const startOfUtcDay = (date = new Date()) => {
+    return new Date(
+        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    );
+};
+
 const calculateStreak = (habit) =>{
     if(!habit.lastCompletedAt)
         return 1;
 
     const today = startOfUtcDay();
-    const lastCompletedDay = startOFUtcDay(habit.lastCompletedAt);
+    const lastCompletedDay = startOfUtcDay(habit.lastCompletedAt);
     const diffrenenceInDays = (today.getTime() - lastCompletedDay.getTime()) / 86400000;
 
     if (diffrenenceInDays === 1) {
@@ -51,18 +58,19 @@ const createHabit= asyncHandler(async(req, res) =>{
         difficulty: selectedDifficulty,
         frequency,
         targetDays,
+        timeOfDay,
         color,
         icon,
         reminderEnabled,
         reminderTime,
         xpReward: reward.xp,
-        coinsReward : reward.coins,
+        coinReward : reward.coins,
     });
-    sendResponse(res, 201,"Habit Created successfully", {habits});
+    sendResponse(res, 201,"Habit Created successfully", { habit });
 });
 const getHabits = asyncHandler(async(req, res) =>{
     const habits = await Habit.find({
-        user: req.iser._id,
+        user: req.user._id,
         isActive: true,
     }).sort({createdAt: -1});
 
@@ -126,7 +134,7 @@ const updateHabit = asyncHandler (async (req, res) =>{
 
         habit.difficulty = req.body.difficulty;
         habit.xpReward = reward.xp;
-        habit.cointReward = reward.coins;
+        habit.coinReward = reward.coins;
     }
 
     await habit.save();
@@ -166,7 +174,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
         throw new Error("Habit Not found");
     }
 
-    const today = startOFUtcDay();
+    const today = startOfUtcDay();
 
     const existingLog = await HabitLog.findOne({
         user: req.user._id,
@@ -185,7 +193,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
         user: req.user._id,
         habit: habit._id,
         date: today,
-        status: "Completed",
+        status: "completed",
         completedAt: new Date(),
         xpEarned: habit.xpReward,
         coinsEarned: habit.coinReward,
@@ -193,7 +201,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
     });
 
     habit.currentStreak = newStreak;
-    habit.longestStreak = Mathmax(habit.longestStreak, newStreak);
+    habit.longestStreak = Math.max(habit.longestStreak, newStreak);
     habit.totalCompletions += 1;
     habit.lastCompletedAt = new Date();
     await habit.save();
@@ -220,8 +228,8 @@ const completeHabit = asyncHandler(async (req, res) =>{
     );
     sendResponse(res, 200, "Habit completed successfully",{
         log,
-        reward:{
-            xpEarned: habit.xpEarned,
+        rewards:{
+            xpEarned: habit.xpReward,
             coinsEarned: habit.coinReward,
         },
         streak: {

@@ -105,7 +105,7 @@ const userSchema = new mongoose.Schema({
         min:0,
     },
 
-    totalHabitsComplete:{
+    totalCompletedHabits:{
         type: Number,
         default:0,
         min:0,
@@ -135,7 +135,7 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 0,
         min: 0,
-        max: 0,
+        max: 100,
     },
 
     unlockedThemes:{
@@ -148,7 +148,7 @@ const userSchema = new mongoose.Schema({
         default: "default",
     },
 
-    privacySetting:{
+    privacySettings:{
         showProfile:{
             type:Boolean,
             default: true,
@@ -165,19 +165,19 @@ const userSchema = new mongoose.Schema({
     },
 
     notificationSettings:{
-        habitReminder:{
+        habitReminders:{
             type: Boolean,
             default: true,
         },
-        questReminder:{
+        questReminders:{
             type: Boolean,
             default: true,
         },
-        StreakWarning:{
+        streakWarnings:{
             type: Boolean,
             default: true,
         },
-        Motivation:{
+        motivation:{
             type: Boolean,
             default: true,
         },

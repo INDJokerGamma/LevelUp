@@ -16,6 +16,9 @@ const router = express.Router();
 router.use(protect);
 router.route("/").get(getHabits).post(createHabit);
 
+router.get("/:id/logs", getHabitLogs);
+router.post("/:id/complete", completeHabit);
+
 router
         .route("/:id")
         .get(getHabitById)

@@ -5,14 +5,14 @@ const habitLogSchema = new mongoose.Schema(
         user:{
             type: mongoose.Schema.Types.ObjectId,
             ref:"User",
-            require: true,
+            required: true,
             index: true,
         },
 
         habit:{
             type: mongoose.Schema.Types.ObjectId,
             ref: "Habit",
-            require: true,
+            required: true,
             index: true,
         },
         date:{
@@ -20,7 +20,7 @@ const habitLogSchema = new mongoose.Schema(
             required: true,
         },
         status:{
-            tye:String,
+            type:String,
             enum: ["completed", "missed", "skipped", "protected"],
             default: "completed",
         },
@@ -55,6 +55,6 @@ const habitLogSchema = new mongoose.Schema(
 
 habitLogSchema.index({user: 1, date: -1});
 habitLogSchema.index({habit: 1, date: -1});
-habitLogSchema.index({user: 1, habit: 1, date: -1},{unique: true});
+habitLogSchema.index({user: 1, habit: 1, date: 1},{unique: true});
 
 module.exports = mongoose.model("HabitLog", habitLogSchema);
