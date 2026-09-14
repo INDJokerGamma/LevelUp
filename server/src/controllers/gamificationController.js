@@ -20,13 +20,13 @@ const getGamificationSummary = asyncHandler(async (req, res) => {
             rankTitle : req.user.rankTitle,
             currentStreak: req.user.currentStreak,
             longestStreak: req.user.longestStreak,
-            totalCompletedhabits: req.user.totalCompletedhabits,
+            totalCompletedHabits: req.user.totalCompletedHabits,
         },
 
         levelProgress: {
             currentLevelXp: levelData.currentLevelXp,
             nextLevelXp: levelData.nextLevelXp,
-            progressPercent: levelData.ProgressPercent,
+            progressPercent: levelData.progressPercent,
         },
 
         ranks: [
@@ -34,8 +34,8 @@ const getGamificationSummary = asyncHandler(async (req, res) => {
             { level: 5, title: "Disciplined" },
             { level: 10, title: "Warrior" },
             { level: 20, title: "Elite" },
-            { level: 50, title: "Legend" },
-            { level: 100, title: "Mythic" },
+            { level: 35, title: "Legend" },
+            { level: 50, title: "Mythic" },
         ],
     });
 });

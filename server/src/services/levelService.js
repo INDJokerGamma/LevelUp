@@ -3,8 +3,8 @@ const rankTiers = [
     { minLevel: 5, title: "Disciplined" },
     { minLevel: 10, title: "Warrior" },
     { minLevel: 20, title: "Elite" },
-    { minLevel: 50, title: "Legend" },
-    { minLevel: 100, title: "Mythic" },
+    { minLevel: 35, title: "Legend" },
+    { minLevel: 50, title: "Mythic" },
 ];
 
 const getXpRequiredForLevel = (level) => {
@@ -16,7 +16,7 @@ const calculateLevelFromXp = (xp) =>{
     let remainingXp = xp;
 
     while(remainingXp >= getXpRequiredForLevel(level)){
-        remainingXp == remainingXp - getXpRequiredForLevel(level);
+        remainingXp -= getXpRequiredForLevel(level);
         level += 1;
     }
 
@@ -24,7 +24,7 @@ const calculateLevelFromXp = (xp) =>{
         level, 
         currentLevelXp: remainingXp,
         nextLevelXp: getXpRequiredForLevel(level),
-        ProgressPercent: Math.round((remainingXp / getXpRequiredForLevel(level)) * 100),
+        progressPercent: Math.round((remainingXp / getXpRequiredForLevel(level)) * 100),
     };
 };
 
@@ -42,7 +42,7 @@ const applyLevelProgress = (user, xpToAdd) =>{
     const previousXp = user.xp;
     const previousLevel = user.level;
 
-    new newTotalXp = previousXp + xpToAdd;
+    const newTotalXp = previousXp + xpToAdd;
     const levelData = calculateLevelFromXp(newTotalXp);
     const rankTitle = getRankTitle(levelData.level);
 
@@ -60,7 +60,7 @@ const applyLevelProgress = (user, xpToAdd) =>{
         leveledUp : levelData.level > previousLevel,
         currentLevelXp: levelData.currentLevelXp,
         nextLevelXp: levelData.nextLevelXp,
-        ProgressPercent: levelData.ProgressPercent,
+        progressPercent: levelData.progressPercent,
     };
 };
 

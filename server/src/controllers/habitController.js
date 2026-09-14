@@ -4,6 +4,7 @@ const Habit = require("../models/Habit");
 const HabitLog = require("../models/HabitLog");
 const User = require("../models/User");
 const sendResponse = require("../utils/apiResponse");
+const { applyLevelProgress } = require ("../services/levelService");
 
 const rewardMap ={
     easy:{xp: 15, coins: 10},
@@ -206,26 +207,16 @@ const completeHabit = asyncHandler(async (req, res) =>{
     habit.lastCompletedAt = new Date();
     await habit.save();
 
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $inc: {
-                xp: habit.xpReward,
-                coins: habit.coinReward,
-                totalCompletedHabits: 1,
-            },
-            $max: {
-                longestStreak: newStreak,
-            },
-            $set: {
-                currentStreak: newStreak,
-            },
-        },
-        {
-            new: true,
-            runValidators: true,
-        }
-    );
+    const user = await User.findById(req.user._id);
+    const levelProgress = applyLevelProgress(user, habit.xpReward);
+
+    user.coins += habit.coinReward;
+    user.totalCompletedHabits += 1;
+    user.longestStreak = Math.max(user.longestStreak, newStreak);
+    user.currentStreak = newStreak;
+
+    await user.save();
+
     sendResponse(res, 200, "Habit completed successfully",{
         log,
         rewards:{
@@ -239,7 +230,10 @@ const completeHabit = asyncHandler(async (req, res) =>{
         userProgress: {
             xp: user.xp,
             coins: user.coins,
+            level : user.level,
+            rankTitle: user.rankTitle,
             totalCompletedHabits: user.totalCompletedHabits,
+            levelProgress,
         },
     });
 });

@@ -11,6 +11,7 @@ const healthRoutes = require("./routes/healthRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const habitRoutes = require("./routes/habitRoutes");
+const gamificationRoutes = require("./routes/gamificationRoutes");
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.get("/", (req, res) => {
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/habits", habitRoutes);
+app.use("/api/gamification", gamificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
