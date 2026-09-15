@@ -12,6 +12,8 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const habitRoutes = require("./routes/habitRoutes");
 const gamificationRoutes = require("./routes/gamificationRoutes");
+const achievementRoutes = require("./routes/achievementRoutes");
+
 
 const app = express();
 
@@ -52,6 +54,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/habits", habitRoutes);
 app.use("/api/gamification", gamificationRoutes);
+app.use("/api/achievements", achievementRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

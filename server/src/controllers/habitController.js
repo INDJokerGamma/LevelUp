@@ -4,7 +4,8 @@ const Habit = require("../models/Habit");
 const HabitLog = require("../models/HabitLog");
 const User = require("../models/User");
 const sendResponse = require("../utils/apiResponse");
-const { applyLevelProgress } = require ("../services/levelService");
+const { applyLevelProgress, calculateLevelFromXp } = require("../services/levelService");
+const { checkAndUnlockAchievements } = require ("../services/achievementService");
 
 const rewardMap ={
     easy:{xp: 15, coins: 10},
@@ -208,7 +209,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
     await habit.save();
 
     const user = await User.findById(req.user._id);
-    const levelProgress = applyLevelProgress(user, habit.xpReward);
+    const habitLevelProgress = applyLevelProgress(user, habit.xpReward);
 
     user.coins += habit.coinReward;
     user.totalCompletedHabits += 1;
@@ -217,11 +218,19 @@ const completeHabit = asyncHandler(async (req, res) =>{
 
     await user.save();
 
+    const unlockedAchievements = await checkAndUnlockAchievements({ user });
+    const finalLevelProgress = calculateLevelFromXp(user.xp);
+
     sendResponse(res, 200, "Habit completed successfully",{
         log,
         rewards:{
             xpEarned: habit.xpReward,
             coinsEarned: habit.coinReward,
+        },
+        achievementsUnlocked: unlockedAchievements,
+        levelEvents: {
+            habit: habitLevelProgress,
+            final: finalLevelProgress,
         },
         streak: {
             current: habit.currentStreak,
@@ -233,7 +242,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
             level : user.level,
             rankTitle: user.rankTitle,
             totalCompletedHabits: user.totalCompletedHabits,
-            levelProgress,
+            levelProgress: finalLevelProgress,
         },
     });
 });
