@@ -112,17 +112,21 @@ const ensureDailyQuests = async (userId) => {
         expiresAt: { $gte: now },
     });
 
-    if (existingDailyQuests.length > 0) {
-        return existingDailyQuests;
+    const expiresAt = endOfUtcDay();
+    const existingKeys = new Set(existingDailyQuests.map((quest) => quest.key));
+    const missingTemplates = dailyQuestTemplates.filter(
+        (template) => !existingKeys.has(template.key)
+    );
+
+    if (missingTemplates.length > 0) {
+        await Promise.all(
+            missingTemplates.map((template) =>
+            createQuestFromTemplate({ userId, template, expiresAt })
+            )
+        );
     }
 
-    const expiresAt = endOfUtcDay();
-
-    return Promise.all(
-        dailyQuestTemplates.map((template) =>
-            createQuestFromTemplate({ userId, template, expiresAt })
-        )
-    );
+    return Quest.find({ user: userId, type: "daily", expiresAt: { $gte: now } });
 };
 
 const ensureWeeklyQuests = async (userId) => {
@@ -135,20 +139,28 @@ const ensureWeeklyQuests = async (userId) => {
 
     });
 
-    if (existingWeeklyQuests.length > 0) {
-        return existingWeeklyQuests;
+    const expiresAt = addDays(endOfUtcDay(), 7);
+    const existingKeys = new Set(existingWeeklyQuests.map((quest) => quest.key));
+    const missingTemplates = weeklyQuestTemplates.filter(
+        (template) => !existingKeys.has(template.key)
+    );
+
+    if (missingTemplates.length > 0) {
+        await Promise.all(
+            missingTemplates.map((template) =>
+            createQuestFromTemplate({ userId, template, expiresAt })
+            )
+        );
     }
 
-    const expiresAt = addDays(endOfUtcDay(), 7);
-
-    return Promise.all(
-        weeklyQuestTemplates.map((template) =>
-            createQuestFromTemplate({ userId, template, expiresAt })
-        )
-    );
+    return Quest.find({ user: userId, type: "weekly", expiresAt: { $gte: now } });
 };
 
 const updateQuestProgress = async ({ userId, completedHabitsDelta = 0, xpDelta = 0 }) => {
+    // A first habit completion should count even if the user has not opened Quest page yet.
+    await ensureDailyQuests(userId);
+    await ensureWeeklyQuests(userId);
+
     const now = new Date();
 
     const activeQuests = await Quest.find({
@@ -188,13 +200,23 @@ const updateQuestProgress = async ({ userId, completedHabitsDelta = 0, xpDelta =
 };
 
 const claimQuestReward = async ({ quest, user }) => {
+    if (quest.expiresAt < new Date()) {
+        const error = new Error("This quest has expired.");
+        error.statusCode = 400;
+        throw error;
+    }
+
     if (!quest.isCompleted) {
-        throw new Error("Quest is not completed yet.");
+        const error = new Error("Quest is not completed yet.");
+        error.statusCode = 400;
+        throw error;
 
     }
 
     if (quest.isClaimed) {
-        throw new Error("Quest reward already claimed.");
+        const error = new Error("Quest reward already claimed.");
+        error.statusCode = 409;
+        throw error;
     }
 
     const levelProgress = applyLevelProgress(user, quest.rewardXp);

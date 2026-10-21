@@ -13,6 +13,7 @@ const authRoutes = require("./routes/authRoutes");
 const habitRoutes = require("./routes/habitRoutes");
 const gamificationRoutes = require("./routes/gamificationRoutes");
 const achievementRoutes = require("./routes/achievementRoutes");
+const questsRouter = require("./routes/questRoutes");
 
 
 const app = express();
@@ -55,6 +56,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/habits", habitRoutes);
 app.use("/api/gamification", gamificationRoutes);
 app.use("/api/achievements", achievementRoutes);
+app.use("/api/quests", questsRouter);
 
 app.use(notFound);
 app.use(errorHandler);

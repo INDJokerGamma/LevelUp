@@ -6,6 +6,7 @@ const User = require("../models/User");
 const sendResponse = require("../utils/apiResponse");
 const { applyLevelProgress, calculateLevelFromXp } = require("../services/levelService");
 const { checkAndUnlockAchievements } = require ("../services/achievementService");
+const {updateQuestProgress} = require("../services/questService");
 
 const rewardMap ={
     easy:{xp: 15, coins: 10},
@@ -219,6 +220,12 @@ const completeHabit = asyncHandler(async (req, res) =>{
     await user.save();
 
     const unlockedAchievements = await checkAndUnlockAchievements({ user });
+
+    const updatedQuests = await updateQuestProgress({
+        userId: user._id,
+        completedHabitsDelta: 1,
+        xpDelta: habit.xpReward,
+    });
     const finalLevelProgress = calculateLevelFromXp(user.xp);
 
     sendResponse(res, 200, "Habit completed successfully",{
@@ -228,6 +235,7 @@ const completeHabit = asyncHandler(async (req, res) =>{
             coinsEarned: habit.coinReward,
         },
         achievementsUnlocked: unlockedAchievements,
+        questsUpdated: updatedQuests,
         levelEvents: {
             habit: habitLevelProgress,
             final: finalLevelProgress,
